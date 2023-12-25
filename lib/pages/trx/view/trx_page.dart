@@ -8,7 +8,9 @@ class TrxPage extends StatelessWidget {
 
   const TrxPage.masuk({super.key})
       : title = 'Masuk',
-        bottom = const OutletDropDownWidget(),
+        bottom = const OutletDropDownWidget(
+          index: 0,
+        ),
         form = const [];
 
   // const TrxPage.keluar({super.key}) : title = 'Keluar';
@@ -31,17 +33,19 @@ class TrxPage extends StatelessWidget {
 }
 
 class OutletDropDownWidget extends StatelessWidget {
-  const OutletDropDownWidget({super.key});
+  const OutletDropDownWidget({super.key, required this.index});
 
   TrxController get _trxController => Get.find<TrxController>();
-  
+  final int index;
+
   @override
   Widget build(BuildContext context) {
     return DropdownButton<String>(
-      items: [
-        DropdownMenuItem(child: Text('Nama Outlet'))
-      ], // todo generate pke data dri API
-      onChanged: _trxController.onAppBarDropDownChange,
+      items: List.generate(
+          _trxController.dropDownValues[index].length,
+          (i) => DropdownMenuItem(
+              child: Text(_trxController.dropDownValues[index][i]))),
+      onChanged: _trxController.onAppBarDropDownChanges[index],
     );
   }
 }

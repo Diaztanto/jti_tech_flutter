@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -188,8 +190,10 @@ class OutletCardWidget extends StatelessWidget {
                     Container(
                       color: Color(0xffC1DDED),
                       child: InkWell(
-                        onTap: () => _homeController.isSliderOpen.value =
-                            !_homeController.isSliderOpen.value,
+                        onTap: () {_homeController.isSliderOpen.value =
+                            !_homeController.isSliderOpen.value;
+                            _homeController.isSliding.value = true;
+                            Timer(Duration(milliseconds: 300), () => _homeController.isSliding.value = false);},
                         child: Padding(
                           padding: const EdgeInsets.all(7.0),
                           child: Center(
@@ -204,7 +208,8 @@ class OutletCardWidget extends StatelessWidget {
                       ),
                     ),
                     Obx(() => AnimatedContainer(
-                          key: ValueKey(_homeController.isSliderOpen.value),
+                      curve: Curves.easeInOut,
+                          // key: ValueKey(_homeController.isSliderOpen.value),
                           duration: Duration(milliseconds: 300),
                           width: _homeController.isSliderOpen.value ? 297 : 0,
                           height: 158,
@@ -212,12 +217,14 @@ class OutletCardWidget extends StatelessWidget {
                               horizontal: 17, vertical: 10),
                           color: Color(0xffC1DDED),
                           child: AnimatedSwitcher(
-                            key: ValueKey(_homeController.isSliderOpen.value &&
-                                !_homeController.isSliding.value),
+                            // key: ValueKey(_homeController.isSliderOpen.value &&
+                            //     !_homeController.isSliding.value),
                             duration: Duration(milliseconds: 300),
                             child: _homeController.isSliderOpen.value &&
                                     !_homeController.isSliding.value
-                                ? Column(children: [
+                                ? Column(
+                                  key: ValueKey(true),
+                                  children: [
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceEvenly,
