@@ -387,7 +387,7 @@ class OutletCardWidget extends StatelessWidget {
                                       ),
                                     )
                                   ])
-                                : Container(),
+                                : Container(key: ValueKey(false),),
                           ),
                         ))
                   ],

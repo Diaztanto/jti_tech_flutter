@@ -13,5 +13,5 @@ List<GetPage> routes = [
   GetPage(
       name: '/Masuk',
       page: () => const TrxPage.masuk(),
-      binding: BindingsBuilder.put(() => MasukTrxController()))
+      binding: BindingsBuilder<TrxController>.put(() => MasukTrxController()))
 ];
