@@ -1,6 +1,75 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
-void main() {
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_background_service_android/flutter_background_service_android.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
+import 'package:tech_test_flutter/routes.dart';
+import 'package:tech_test_flutter/services/api_service.dart';
+// import 'package:workmanager/workmanager.dart';
+
+@pragma('vm:entry-point')
+void bindingsBuilder() {
+  Get.isRegistered<ApiService>()
+      ? Get.find<ApiService>()
+      : Get.put(ApiService());
+}
+
+@pragma('vm:entry-point')
+void onStart(ServiceInstance service) {
+  bindingsBuilder();
+
+  if (service is AndroidServiceInstance) {
+    service.on('setAsForeground').listen((event) {
+      // todo cari cara listen app foreground/background?
+      service.setAsForegroundService();
+    });
+
+    service.on('setAsBackground').listen((event) {
+      service.setAsBackgroundService();
+    });
+  }
+
+  service.on('stopService').listen((event) {
+    service.stopSelf();
+  });
+
+  // custom command
+  Timer.periodic(Duration(seconds: 30), (timer) {
+    print('debug bg service');
+    Get.find<ApiService>().bgApiHit();
+  });
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+  ));
+
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+  flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.requestNotificationsPermission();
+
+  FlutterBackgroundService().configure(
+      androidConfiguration:
+          AndroidConfiguration(onStart: onStart, isForegroundMode: true),
+      iosConfiguration: IosConfiguration());
+
+  // Workmanager().initialize(
+  //   callbackDispatcher, // The top level function, aka callbackDispatcher
+  //   isInDebugMode: true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
+  // );
+  // Workmanager().registerPeriodicTask("task-identifier", "simpleTask", frequency: Duration(seconds: 5)); //  paling cepet 15 menit. kudu cari yg 30 detik
+  // Workmanager().registerOneOffTask("task-identifier", "simpleTask");
+
   runApp(const MyApp());
 }
 
@@ -10,7 +79,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
         // This is the theme of your application.
@@ -28,10 +97,15 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        fontFamily: "Roboto",
+        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF2787BD)),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      debugShowCheckedModeBanner: false,
+      getPages: routes,
+      initialRoute: "/Home",
+      // home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      initialBinding: BindingsBuilder(bindingsBuilder),
     );
   }
 }
@@ -123,3 +197,15 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+
+// @pragma('vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
+// void callbackDispatcher() {
+//   Workmanager().executeTask((task, inputData) {
+//     // ApiService _apiService = Get.isRegistered<ApiService>() ? Get.find<ApiService>() : Get.put(ApiService());
+
+//     // Timer.periodic(Duration(seconds: 5), (timer) { // doesn't run
+//       print("Native called background task: $task"); //simpleTask will be emitted here.
+//     // });
+//     return Future.value(true);
+//   });
+// }
